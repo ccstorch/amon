@@ -6,52 +6,45 @@ import { gql, graphql } from 'react-apollo';
 import { PageHeader } from '../../components'
 import FormGenerator from './FormGenerator';
 import querySingleGenerator from '../../helpers/querySingleGenerator';
+import componentsNameGenerator from '../../helpers/componentsNameGenerator'
+import customViewHelpers from '../../helpers/customViewHelpers'
 
 class EditRecordViewGenerator {
-  constructor({ options, model, amon, combinedFields }) {
-    this.options = options;
-    this.model = model;
-    this.amon = amon;
-    this.combinedFields = combinedFields;
+  constructor(viewSituation) {
+    this.viewSituation = viewSituation;
   }
 
   generate() {
-    const { options, model, amon, combinedFields } = this;
+    const { viewOptions, model, url, viewName, amon } = this.viewSituation;
 
-    const FormComponent = new FormGenerator({ options, model, mutationName: model.api.update, isUpdate: true, amon, combinedFields }).generate();
+    const formSituation = { ...this.viewSituation, mutationName: model.api.update, isUpdate: true };
 
-    const Component =  ({ match, data }) => {
-      const { id } = match.params;
+    let ViewComponent = customViewHelpers.getCustomComponent(formSituation, 'EditView');
 
-      if (data.loading) {
-        return (<div>Loading</div>)
+      if(!ViewComponent) {
+
+      let Header = customViewHelpers.getCustomComponent(formSituation, 'EditHeader');
+      if(!Header) Header = () => <PageHeader title={'Edit ' + model.labels.single} showReturn />;
+
+      const FormComponent = new FormGenerator(formSituation).generate();
+
+      ViewComponent =  ({ match, data }) => {
+        const { id } = match.params;
+
+        return (
+          <div>
+            <Header />
+            <FormComponent id={id} />
+          </div>
+        )
       }
 
-      let record = false;
-      if(data[model.api.single]) {
-        record = data[model.api.single];
-      }
-
-      return (
-        <div>
-          <PageHeader title={'Edit ' + model.labels.single} showReturn />
-          {record && <FormComponent record={record} />}
-          {!record && 'Not found'}
-        </div>
-      )
     }
 
-    return this.bindReduxAndQueries(Component);
-  }
+    // Add component to the maps of components to give the ability to use it somewhere else
+    amon._addView(viewName, ViewComponent, url);
 
-  bindReduxAndQueries(Component) {
-    const { options, model, amon, combinedFields } = this;
-
-    const feedQuery = querySingleGenerator.generate(model.api.single, combinedFields, amon);
-
-    return graphql(feedQuery, {
-      options: ({ match }) => ({ variables: { id: match.params.id }})
-    })(Component);
+    return ViewComponent;
   }
 }
 

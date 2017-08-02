@@ -16,6 +16,11 @@ networkInterface.use([{
   },
 }]);
 
-const client = new ApolloClient({ networkInterface });
+const options = {
+  networkInterface,
+  dataIdFromObject: o => o.id
+}
+
+const client = new ApolloClient(options);
 
 export default client;

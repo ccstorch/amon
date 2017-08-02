@@ -1,3 +1,5 @@
+import React from 'react';
+
 const options = {
   name: 'Posts',
   descriptions: false,
@@ -15,7 +17,12 @@ const options = {
     situation: {
       hideOn: ['table'],
     },
-    author: {},
+    tags: {
+      hideOn: ['table'],
+    },
+    author: {
+      inlineForm: true
+    },
     createdAt: {
       filter: false,
       // showOn: ['show'],
@@ -23,16 +30,20 @@ const options = {
     },
   },
 
-  callbacks: {
+  customComponents: {
+    // ListView: (viewSituation) => () => <div>{ viewSituation.viewName }</div>,
+    // ListTable: () => ({ data }) => <div>{console.log(data)}</div>,
+    // ListHeader: () => () => <div>Teste</div>,
+    // ShowView: () => () => <div>Teste</div>,
+    // ShowDetails: () => () => <div>Teste</div>,
+    // ShowHeader: () => () => <div>Teste</div>,
+    // NewView: () => () => <div>Teste</div>,
+    // NewHeader: () => () => <div>Teste</div>,
+    // NewForm: () => () => <div>Teste</div>,
+    // EditView: () => () => <div>Teste</div>,
+    // EditHeader: () => () => <div>Teste</div>,
+    // EditForm: () => () => <div>Teste</div>,
   },
-
-  // customViews: {
-  //   index: () => <Test />
-  //   show: () => <Test />
-  //   new: () => <Test />
-  //   edit: () => <Test />
-  //   form: () => <Test />
-  // },
 }
 
 export default options;

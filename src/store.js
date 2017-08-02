@@ -6,8 +6,6 @@ import rootReducer from './reducers'
 
 export const history = createHistory()
 
-console.log(123231, history);
-
 const initialState = {}
 const enhancers = []
 const middleware = [

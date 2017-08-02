@@ -1,7 +1,7 @@
 // import Amon from 'amon';
 import Amon from '../amon';
-import views from './views';
 import models from './models';
+import views from './views';
 // import styles from './styles';
 import menus from './menus';
 import enums from './enums';

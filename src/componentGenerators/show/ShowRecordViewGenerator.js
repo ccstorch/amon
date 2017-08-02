@@ -1,59 +1,57 @@
 import React from 'react'
-import { bindActionCreators } from 'redux'
-import { connect } from 'react-redux'
 import { Form, Input, Button } from 'antd';
-import { gql, graphql } from 'react-apollo';
 import { PageHeader, RecordActionsButtons } from '../../components'
 import ShowGenerator from './ShowGenerator';
 import querySingleGenerator from '../../helpers/querySingleGenerator';
+import componentsNameGenerator from '../../helpers/componentsNameGenerator'
+import customViewHelpers from '../../helpers/customViewHelpers'
 
 class ShowRecordViewGenerator {
-  constructor({ options, model, amon, combinedFields }) {
-    this.options = options;
-    this.model = model;
-    this.amon = amon;
-    this.combinedFields = combinedFields;
+  constructor(viewSituation) {
+    this.viewSituation = viewSituation;
   }
 
   generate() {
-    const { options, model } = this;
+    const { viewOptions, viewName, url, model, amon, combinedFields } = this.viewSituation;
 
-    const ShowComponent = new ShowGenerator({ options, model }).generate();
+    const showSituation = { ...this.viewSituation };
 
-    const Component =  ({ match, data }) => {
-      const { id } = match.params;
+    const ShowComponent = new ShowGenerator(showSituation).generate();
 
-      if (data.loading) {
-        return (<div>Loading</div>)
+    const { Component: ActionsButtons } = amon.getComponent(componentsNameGenerator.recordActionsButtons(model));
+
+    let ViewComponent = customViewHelpers.getCustomComponent(showSituation, 'ShowView');
+
+    if(!ViewComponent) {
+
+      let Header = customViewHelpers.getCustomComponent(showSituation, 'ShowHeader');
+      if(!Header) {
+        Header = ({ actions }) => <PageHeader title={model.labels.single} showReturn rightContent={actions} />;
       }
 
-      let record = false;
-      let actions = false;
-      if(data[model.api.single]) {
-        record = data[model.api.single];
-        actions = <div style={{ float: 'right' }}><RecordActionsButtons record={record} url={options.url} /></div>
+      ViewComponent =  ({ match, data }) => {
+        const { id } = match.params;
+
+        const actions = (
+          <div style={{ float: 'right' }}>
+            <ActionsButtons id={id} url={viewOptions.url} />
+          </div>
+        );
+
+        return (
+          <div>
+            <Header actions={actions} />
+            <ShowComponent id={id} />
+          </div>
+        )
       }
 
-      return (
-        <div>
-          <PageHeader title={model.labels.single} showReturn rightContent={actions} />
-          {record && <ShowComponent record={record} />}
-          {!record && 'Not found'}
-        </div>
-      )
     }
 
-    return this.bindReduxAndQueries(Component);
-  }
+    // Add component to the maps of components to give the ability to use it somewhere else
+    amon._addView(viewName, ViewComponent, url);
 
-  bindReduxAndQueries(Component) {
-    const { options, model, amon, combinedFields } = this;
-
-    const feedQuery = querySingleGenerator.generate(model.api.single, combinedFields, amon);
-
-    return graphql(feedQuery, {
-      options: ({ match }) => ({ variables: { id: match.params.id }})
-    })(Component);
+    return ViewComponent;
   }
 }
 

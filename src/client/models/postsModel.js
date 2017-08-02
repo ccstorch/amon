@@ -12,6 +12,7 @@ export default {
     single: 'Post',
     create: 'createPost',
     update: 'updatePost',
+    delete: 'deletePost',
   },
 
   fields: {
@@ -37,12 +38,12 @@ export default {
     author: {
       label: 'Author',
       type: 'relationship',
-      relatioshipType: 'manyToOne',
+      relationshipType: 'manyToOne',
       model: 'Author',
-      getSelectData: (author, post) => author && (author.name + ', ' + author.age),
+      getSelectData: (author) => author && (author.name + ', ' + author.age),
       getSmallData: (author, post) => author && author.name,
       getFullData: (author, post) => author && (author.name + ', ' + author.age),
-      required: true,
+      // required: true,
       requestedFields: {
         name: {},
         age: {},
@@ -53,7 +54,20 @@ export default {
       label: 'Criado em',
       type: 'date',
       format: 'DD/MM/YYYY',
+      hideOn: ['form'],
+    },
+
+    tags: {
+      label: 'Tags',
+      type: 'string',
+      isArray: true,
     },
   },
+
+  // callbacks: {
+  //   beforeFetch(record, isList, amon) {},
+  //   beforeSave(newRecord, oldRecord, isEditing, amon) {},
+  //   beforeDelete(record, amon) {},
+  // },
 
 }

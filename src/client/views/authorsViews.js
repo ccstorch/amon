@@ -15,6 +15,10 @@ const options = {
   fields: {
     name: {},
     age: {},
+    posts: {
+      showOn: ['form', 'show'],
+      inlineForm: true
+    },
     // gender: {},
   },
 }

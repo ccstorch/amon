@@ -3,7 +3,6 @@ import { gql } from 'react-apollo';
 
 const helpers = {
   getFieldType(field) {
-    // TODO: Check types
     switch (field.type) {
       case 'boolean': return 'Boolean';
       case 'integer': return 'Int';
@@ -18,9 +17,18 @@ const helpers = {
   getFieldName(field, name) {
     // TODO: Check types
     switch (field.type) {
-      case 'relationship': return name+'Id';
+      case 'relationship':
+        if(field.relationshipType === 'manyToOne') return name+'Id';
+        if(field.relationshipType === 'oneToMany') return name+'Ids';
       default: return name;
     }
+  },
+
+  isArray(field) {
+    if(field.relationshipType === 'oneToMany' || field.relationshipType === 'manyToMany') {
+      return true
+    }
+    return field.isArray;
   },
 
   processFields(model, isUpdate) {
@@ -35,7 +43,12 @@ const helpers = {
 
     _.forEach(model.fields, (field, key) => {
       const fieldName = this.getFieldName(field, key);
-      let declaration = `$${fieldName}: ${this.getFieldType(field)}`;
+      const isArray = this.isArray(field);
+
+      // TODO: Think of a better solution
+      if(fieldName === 'createdAt') return;
+
+      let declaration = `$${fieldName}: ${isArray ? '[' : ''}${this.getFieldType(field)}${isArray ? '!]' : ''}`;
       if(field.required) declaration += '!';
       const param = `${fieldName}: $${fieldName}`;
 

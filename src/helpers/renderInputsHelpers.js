@@ -2,6 +2,7 @@ import _ from 'lodash';
 import React from 'react';
 import moment from 'moment';
 import mutationGenerator from './mutationGenerator';
+import componentsNameGenerator from './componentsNameGenerator';
 import { Form, Input, Button, Upload, Icon, message, DatePicker, Select, InputNumber } from 'antd';
 
 const { TextArea } = Input;
@@ -13,8 +14,27 @@ const helpers = {
     form.setFieldsValue({ [fieldName]: value });
   },
 
+  getInitialFieldValueData(record, fieldSituation) {
+    const { field, fieldName } = fieldSituation;
+
+    if(!!record && record[fieldName]) {
+      if(field.type === 'relationship') {
+        if(field.relationshipType === 'oneToMany' || field.relationshipType === 'manyToMany') {
+          return _.map(record[fieldName], (item) => item.id);
+        }
+        return record[fieldName].id;
+      }
+      return record[fieldName];
+    }
+  },
+
+  getWrapper() {
+    return ({ children }) => <div>{children}</div>;
+  },
+
   render({ key, field, form, initialValue, model, amon }) {
     const { getFieldDecorator } = form;
+    const Wrapper = this.getWrapper();
 
     const fieldDecoratorOptions = {};
     if(!!initialValue) fieldDecoratorOptions.initialValue = initialValue;
@@ -85,18 +105,18 @@ const helpers = {
 
       case 'text':
         return (
-          <FormItem {...wrapperProps}>
-            {getFieldDecorator(key, {
-              ...fieldDecoratorOptions,
-              rules: [{
-                type: 'string', message: 'Invalid',
-              }, {
-                required: field.required, message: 'Required',
-              }],
-            })(
-              <TextArea autosize={{ minRows: 2, maxRows: 12 }} />
-            )}
-          </FormItem>
+            <FormItem {...wrapperProps}>
+              {getFieldDecorator(key, {
+                ...fieldDecoratorOptions,
+                rules: [{
+                  type: 'string', message: 'Invalid',
+                }, {
+                  required: field.required, message: 'Required',
+                }],
+              })(
+                <TextArea autosize={{ minRows: 2, maxRows: 12 }} />
+              )}
+            </FormItem>
         );
 
       case 'integer':
@@ -120,7 +140,7 @@ const helpers = {
           <FormItem {...wrapperProps} hasFeedback={false}>
             {getFieldDecorator(key, {
               ...fieldDecoratorOptions,
-              rules: [{ type: 'string', required: true, message: 'Invalid' }],
+              rules: [{ type: 'string', required: field.required, message: 'Invalid' }],
             })(
               <Select
                 showSearch
@@ -136,16 +156,27 @@ const helpers = {
         );
 
       case 'relationship':
-        const { Component } = amon.getComponent(`${model.name}_${field.relatioshipType}_${key}_Select`);
+        let componentName;
+        switch (field.relationshipType) {
+          case 'oneToMany':
+            componentName = componentsNameGenerator.SelectManyModel(model, field, key);
+            if(field.inlineForm) componentName = componentsNameGenerator.SelectManyModelWithForm({ fieldName: key, model, field });
+            break;
+          default:
+            componentName = componentsNameGenerator.SelectModel(model, field, key);
+            if(field.inlineForm) componentName = componentsNameGenerator.SelectModelWithForm({ fieldName: key, model, field });
+        }
+
+        const { Component } = amon.getComponent(componentName);
         const fieldName = mutationGenerator.getFieldName(field, key);
 
         return (
           <FormItem {...wrapperProps} hasFeedback={false}>
             {getFieldDecorator(fieldName, {
               ...fieldDecoratorOptions,
-              rules: [{ type: 'string', required: true, message: 'Invalid' }],
+              rules: [{ required: field.required, message: 'Required' }],
             })(
-              <Component />
+              <Component parentForm={form} />
             )}
           </FormItem>
         );
